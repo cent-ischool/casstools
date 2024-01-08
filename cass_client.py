@@ -69,7 +69,9 @@ class CassClient(object):
         headers = {"X-JUPYTERHUB-API-TOKEN": self._auth_token_}
         response = requests.get(f"{self._cass_url_}/courses/{course_key}/assignments/list", headers=headers)
         response.raise_for_status()
-        return response.json()
+        names = response.json()
+        names_only = [ n.split("/")[-1] for n in names]
+        return names_only
 
     def get_course_roster(self, course_key) -> pd.DataFrame:
         headers = {"X-JUPYTERHUB-API-TOKEN": self._auth_token_}
@@ -97,6 +99,11 @@ class CassClient(object):
             response.raise_for_status()
             return response.json()
 
+    def get_assignment_submission(self, course_key, assignment_name, student, filename):
+        headers = {"X-JUPYTERHUB-API-TOKEN": self._auth_token_}
+        response = requests.get(f"{self._cass_url_}/courses/{course_key}/submission/{assignment_name}/fetch/{student}/file/{filename}", headers=headers)
+        response.raise_for_status()
+        return response.json()
 
 if __name__ == '__main__':
     client = CassClient()

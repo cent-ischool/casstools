@@ -66,7 +66,7 @@ class Assignment(object):
         app = JupyterFrontEnd()
         app.commands.execute('docmanager:save')
 
-    def submit(self, ui=False):
+    def submit(self, ui=False):        
         dtnow = datetime.now()
         course_key = self.parsed_path.course_key_part
         assignment_file_path = self.parsed_path.fullpath
@@ -76,6 +76,9 @@ class Assignment(object):
         # save the current notebook
         self._autosave()
         print(f"{OK} TIMESTAMP  : {dtnow.strftime(DATETIME_DISPLAY_FORMAT)}")
+
+        # get info about user
+        me = self.client.whoami()
 
         # Course Check
         try:
@@ -89,7 +92,6 @@ class Assignment(object):
         ####################################
         # Student Check
         try:
-            me = self.client.whoami()
             user = self.client.get_user_course_info(course_key)
             student = user['name']
             print(f"{OK} USER       : {user['name']}")
@@ -102,7 +104,7 @@ class Assignment(object):
         #Assignment Check
         try:
             assignments_list = self.client.get_course_assignment_names(course_key)
-            if self.parsed_path.path not in assignments_list:
+            if self.parsed_path.filename_part not in assignments_list:
                 raise Exception(f"{self.parsed_path.filename_part} is not an assignment on the course assignment list.")
 
             assignments = self.client.get_course_assignments(course_key)
@@ -128,16 +130,16 @@ class Assignment(object):
             print()
         except Exception as e:
             self._file_check_error(e)
-            return         
+            return
 
-                
-        confirm = self._confirm_submission(late = assignment_late, resubmit = results['exists'])
+
+        confirm = self._confirm_submission(late=assignment_late, resubmit=results['exists'])
         if not confirm:
             print(f"{THUMBS_DOWN} Submission Cancelled")
             # save the current notebook
-            self._autosave()            
+            self._autosave()
             return 
-        
+
         ####################################        
         # Actual Submission
         try:
