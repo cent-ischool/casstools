@@ -8,7 +8,7 @@ class PathParser(object):
             self.fullpath = ipynb_path.get()
         else:
             self.fullpath = path
-            
+
         self.path = self.fullpath.replace("/home/jovyan/library/","")
 
     @property

@@ -15,29 +15,28 @@ def deobfuscate(encoded_code: str) -> str:
 
 def syntax_check(code: str) -> dict:
     from os import remove
-    with open ("_tmp_.py", "w") as f:
+    with open("_tmp_.py", "w") as f:
         f.write(code)
-    process = Popen(['python','-m','py_compile', '_tmp_.py'], stdout=PIPE, stderr=PIPE)
-    out,err = process.communicate()
+    process = Popen(['python', '-m', 'py_compile', '_tmp_.py'], stdout=PIPE, stderr=PIPE)
+    out, err = process.communicate()
     out = out.decode("utf-8")
     err = err.decode("utf-8").replace('File "_tmp_.py",',"") 
     remove("_tmp_.py")
-    return  { 'ok' : err == "", 
-             'output' : out,
-             'error' : err }
+    return {'ok': err == "",
+            'output': out,
+            'error': err}
+
 
 def code_similarity_check(ref_code: str, candidate_code: str, diff_method = pycode_similar.UnifiedDiff) -> dict:
     try:
-        code = [ ref_code, candidate_code ]
+        code = [ref_code, candidate_code]
         results = pycode_similar.detect(code ,diff_method=diff_method, keep_prints=True, module_level=True)
         out = results[0][1][0]
-        return { 'similar_token_count' : out.plagiarism_count, 
-                'total_tokens' : out.total_count,
-                'pct_similar' : out.plagiarism_percent }
+        return { 'similar_token_count': out.plagiarism_count, 
+                'total_tokens': out.total_count,
+                'pct_similar': out.plagiarism_percent }
     except:
-        return { 'similar_token_count' : 0, 
-                'total_tokens' : 0,
-                'pct_similar' : 0 }
+        return {'similar_token_count': 0, 'total_tokens': 0, 'pct_similar': 0 }
 
 
 def execute_code(code: str, redirected_input: str) -> dict:
@@ -45,10 +44,10 @@ def execute_code(code: str, redirected_input: str) -> dict:
     out, err = process.communicate(input=redirected_input.encode())
     out = out.decode("utf-8")
     err = err.decode("utf-8")
-    return  { 'ok' : err == "",
-        'input' : redirected_input,
-        'output' : out,
-        'error' : err }
+    return {'ok': err == "",
+            'input': redirected_input,
+            'output': out,
+            'error': err}
 
 # code = '''
 # num1 = int(input("Enter #1 :"))

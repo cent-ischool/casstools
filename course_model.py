@@ -1,5 +1,6 @@
 from os import environ, path
-import git 
+import git
+
 
 class Course(object):
 
@@ -73,7 +74,7 @@ class Course(object):
             return remote
         else:
             return None
-    
+
     @property
     def term_folder_matches_course_git(self):
         if self.course_dict.get('git_url', None) is not None:
