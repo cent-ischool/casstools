@@ -82,18 +82,20 @@ class NotebookFile(object):
         cells = [c for c in self.code_cells if self._extract_metadata_value(c, "code_cell_type") in ["debug_code", "write_code"]]
         return cells
 
+    
     def __check(self, boolean_expression):
         if boolean_expression:
             return OK
         else:
             return CANCEL
 
+
     def validate_lab(self):
         '''
         validated the lab file has the necessary metadata cells for the self-check, and lab is ready to publish. This is an author's tool to make sure check_lab will work.
         '''
         check1 = self.__check(self.has_submission_cell)
-        print(f"\t{check1} notebook: has submission cell")
+        print(f"{check1} notebook: has submission cell")
         
         for rc_cell in self.code_cells_of_type("run_code"):
 
@@ -226,6 +228,106 @@ class NotebookFile(object):
         else:       
             return row
 
+
+    def validate_homework(self):
+        '''
+        validated the homework file has the necessary metadata cells for the self-check, and lab is ready to publish. This is an author's tool to make sure check_lab will work.
+        '''
+        check1 = self.__check(self.has_submission_cell)
+        print(f"{check1} notebook: has submission cell")
+
+        cell_types = ['analysis_output_cell', "analysis_input_cell", "analysis_plan_cell", "learned_cell", "challenges_cell", "prepared_cell", "help_cell", "comfort_cell"]
+
+        for cell_type in cell_types:            
+            cells = self.markdown_cells_of_type(cell_type)
+            print("CELL", cells)
+            check1 = self.__check(len(cells)==1)       
+            print(f"\t{check1} {cell_type}: should have ONE {cell_type.replace('_cell','')} cell")
+            check2 = self.__check(cells[0]['source'].strip()=="")
+            print(f"\t{check1} {cell_type}: should should be empty")
+
+        code_cells = self.code_cells_of_type("write_code")
+        for ec_cell in code_cells:
+            print(ec_cell)
+            student_code = "\n".join([line for line in ec_cell.source.split("\n") if not line.strip().startswith("#")]).strip()
+            check3 = self.__check(student_code == "")
+            print(f"\t{check3} exercise_code cell: code_cell_type='write_code' cell should be empty {student_code}")
+
+    def check_homework(self, output_issues=True):
+        '''
+        Pre-check/ pre-grade homework before submission.
+        '''
+        row = { 'issues': [], 'details': [] }
+        # INVENTORY
+        exercise_code_cells =  self.exercise_code_cells
+
+        mandatory_cells = ['analysis_output_cell', "analysis_input_cell", "analysis_plan_cell", "learned_cell", "challenges_cell", "prepared_cell", "help_cell"]
+        friendly_names = [ 'Problem Analysis 1.1 Program Outputs', 'Problem Analysis 1.2 Program Inputs', 'Problem Analysis 1.3 The Plan (Algorithm)', 'Metacognition 3.1', 'Metacognition 3.2', 'Metacognition 3.3', 'Metacognition 3.4']
+        index = 0
+        for cell_type in mandatory_cells:
+            try:
+                cell = self.markdown_cells_of_type(cell_type)[0]
+                row[cell_type] = cell['source'].strip()
+                if row[cell_type] == "":
+                    row['issues'].append(f"{friendly_names[index]} cell is blank. Thoughtful completion of this section factors into your grade.")
+        
+            except IndextError:
+                print(f"ERROR: Missing {friendly_names[index]} Cell. Did you erase it?")
+            index +=1
+        
+        try:
+            comfort_cell = self.markdown_cells_of_type("comfort_cell")[0]
+            row['comfort_level'] = comfort_cell['source'].strip()
+            if row['comfort_level'] == "":
+                row['issues'].append("Metacognition 3.5 Comfort level is blank.")
+            elif row['comfort_level'].isdigit():
+                c = int(row['comfort_level']) 
+                if not c in [1,2,3,4]:
+                    row['issues'].append("Metacognition 3.5 Comfort level should be 1,2,3 or 4.")
+            else:
+                 row['issues'].append("Metacognition 3.5 Comfort level should be 1,2,3 or 4.")                
+        except IndexError:
+            print("ERROR: Missing Metacognition 3.5 Cell. Did you erase it?")
+
+        
+        for cell in exercise_code_cells:
+            label = self._extract_metadata_value(cell, "label")
+            student_code = "\n".join([line for line in cell.source.split("\n") if not line.strip().startswith("#")]).strip()
+            solution_code = "".join(self._extract_metadata_value(cell, "solution"))
+            syntax = ct.syntax_check(student_code)
+            similarity = ct.code_similarity_check(solution_code, student_code)
+
+            row[label] = { 
+                'has_code': 'no' if student_code == "" else 'yes',
+                'syntax': 'ok' if syntax['ok'] else 'error',
+                'similarity': similarity['pct_similar']
+            }
+            details = {
+                'label': label,
+                'data' : row[label],
+                'syntax': syntax,
+                'similarity': similarity,
+                'student': student_code,
+                'solution': solution_code
+            }
+            row['details'].append(details)
+
+            if row[label]['has_code'] == 'no':
+                row['issues'].append(f"{label} does not have a code solution.")
+            elif row[label]['syntax'] == 'error':
+                row['issues'].append(f"{label} code has syntax error: {syntax['error']}. Fix errors for a better grade.")
+            # elif float(row[label]['similarity']) < 0.5:
+            #     row['issues'].append(f"{label} code not at least 50% similar to expected solution.")
+        
+        if output_issues:
+            for issue in row['issues']:
+                print(f"{CANCEL} {issue}")
+            if len(row['issues']) == 0:    
+                print(f"{OK} Completed the problem analysis.")
+                print(f"{OK} Solution Cell has no syntax errors.")
+                print(f"{OK} Completed your metacognition.")
+        else:         
+            return row
 
 # import nbformat
 
