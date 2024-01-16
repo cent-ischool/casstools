@@ -107,5 +107,7 @@ class CassClient(object):
 
 if __name__ == '__main__':
     client = CassClient()
-    course = client.add_course("ist256","spring2024","https://github.com/ist256/spring2024.git")
-    courses = client.get_courses()
+    # course = client.add_course("ist256","spring2024","https://github.com/ist256/spring2024.git")
+    # courses = client.get_courses()
+    info = client.submission_info("ist256-spring2024", "LAB-Intro.ipynb","dlnosky@syr.edu","LAB-Intro.ipynb")
+    print(info)
