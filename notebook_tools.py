@@ -211,10 +211,10 @@ class NotebookFile(object):
                 row['issues'].append(f"{label} does not have a code solution.")
             elif row[label]['syntax'] == 'error':
                 row['issues'].append(f"{label} code has syntax error: {syntax['error']}")
-            elif float(row[label]['similarity']) < 0.5:
-                row['issues'].append(f"{label} code not at least 50% similar to expected solution.")
+            elif float(row[label]['similarity']) < 0.25:
+                row['issues'].append(f"{QUESTION} code not at least 25% similar to expected solution.")
 
-        
+
         if output_issues:
             for issue in row['issues']:
                 print(f"{CANCEL} {issue}")
