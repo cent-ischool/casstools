@@ -191,6 +191,7 @@ class NotebookFile(object):
             solution_code = "".join(self._extract_metadata_value(cell, "solution"))
             syntax = ct.syntax_check(student_code)
             similarity = ct.code_similarity_check(solution_code, student_code)
+            solution_similarity_threshold =  0.25 if self._extract_metadata_value(cell, "solution_threshold") is None else float(self._extract_metadata_value(cell, "solution_threshold"))
 
             row[label] = { 
                 'has_code': 'no' if student_code == "" else 'yes',
@@ -208,24 +209,23 @@ class NotebookFile(object):
             row['details'].append(details)
 
             if row[label]['has_code'] == 'no':
-                row['issues'].append(f"{label} does not have a code solution.")
+                row['issues'].append(f"{label} you code does not have a code solution.")
             elif row[label]['syntax'] == 'error':
-                row['issues'].append(f"{label} code has syntax error: {syntax['error']}")
-            elif float(row[label]['similarity']) < 0.25:
-                row['issues'].append(f"{QUESTION} code not at least 25% similar to expected solution.")
-
+                row['issues'].append(f"{label} you code has syntax error: {syntax['error']}")
+            elif float(row[label]['similarity']) < solution_similarity_threshold:
+                row['issues'].append(f"{label} you code not at least {solution_similarity_threshold} similar to expected solution. Your similarity: {row[label]['similarity']}")
 
         if output_issues:
             for issue in row['issues']:
                 print(f"{CANCEL} {issue}")
-            if len(row['issues']) == 0:    
+            if len(row['issues']) == 0:
                 print(f"{OK} The lab submission appears to have no issues.")
                 print(f"  {row['code_cells_pct']} Percent of cell executed.")
                 print("  Summary of code Exercises")
                 print("  CODE\tSYNTAX\tSIMILARITY")
                 for d in row['details']:
                     print(f"  {d['label']}\t{d['data']['syntax']}\t{d['data']['similarity']}")
-        else:       
+        else:
             return row
 
 
@@ -289,11 +289,11 @@ class NotebookFile(object):
         except IndexError:
             print("ERROR: Missing Metacognition 3.5 Cell. Did you erase it?")
 
-        
         for cell in exercise_code_cells:
             label = self._extract_metadata_value(cell, "label")
             student_code = "\n".join([line for line in cell.source.split("\n") if not line.strip().startswith("#")]).strip()
             solution_code = "".join(self._extract_metadata_value(cell, "solution"))
+            solution_similarity_threshold =  0.25 if self._extract_metadata_value(cell, "solution_threshold") is None else float(self._extract_metadata_value(cell, "solution_threshold"))
             syntax = ct.syntax_check(student_code)
             similarity = ct.code_similarity_check(solution_code, student_code)
 
@@ -316,17 +316,24 @@ class NotebookFile(object):
                 row['issues'].append(f"{label} does not have a code solution.")
             elif row[label]['syntax'] == 'error':
                 row['issues'].append(f"{label} code has syntax error: {syntax['error']}. Fix errors for a better grade.")
-            # elif float(row[label]['similarity']) < 0.5:
-            #     row['issues'].append(f"{label} code not at least 50% similar to expected solution.")
-        
+            if solution_code != "":
+                 if float(row[label]['similarity']) < solution_similarity_threshold:
+                    row['issues'].append(f"{label} code not at least {solution_similarity_threshold} similar to expected solution.")
+
+            #TODO test input, expected output
+
         if output_issues:
             for issue in row['issues']:
                 print(f"{CANCEL} {issue}")
             if len(row['issues']) == 0:    
                 print(f"{OK} Completed the problem analysis.")
-                print(f"{OK} Solution Cell has no syntax errors.")
+                print(f"{OK} Your solution cells have no syntax errors.")
+                if solution_code != "":
+                    print(f"{OK} your solution is within the similatiry threshold of: {solution_similarity_threshold} to the expected solution. Your similarity: {row[label]['similarity']}")
+
+                #TODO Tests based on inputs / outputs
                 print(f"{OK} Completed your metacognition.")
-        else:         
+        else:
             return row
 
 # import nbformat
