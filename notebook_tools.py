@@ -297,10 +297,40 @@ class NotebookFile(object):
             syntax = ct.syntax_check(student_code)
             similarity = ct.code_similarity_check(solution_code, student_code)
 
+            tests = self._extract_metadata_value(cell, "tests")
+
+            test_summary = ""
+            test_results = []
+            if student_code != "" and syntax['ok']:
+                for test in tests:
+                    if test['kind'] == "runcode":
+                        results = ct.execute_code(student_code, test['input-stream'])
+                        results['kind'] = test['kind']
+                        results['search-output'] = test['search-output']
+                        results['found-output-match'] = [ results['output'].find(output) >= 0 for output in test['search-output'] ]
+                    elif test['kind'] == 'assertion':
+                        if test.get('include-code', False):
+                            code = student_code + "\n\n" + test['code'] + "\n"
+                        else:
+                            code = test['code'] + "\n"
+                        results = ct.execute_code(code, "")
+                        results['kind'] = test['kind']
+                    #test['results'] = results
+                    test_results.append(results)
+
+                print(test_results)
+                test_summary = "Pass"
+                for r in test_results:
+                    for i in range(len(r.get('found-output-match', []))):
+                        if not r['found-output-match'][i]:
+                            row['issues'].append(f"{label} did not pass automated test with inputs: {r['input']} Expected output should contain {r['search-output'][i]}. Actual output was {r['output']}")
+                            test_summary = "Fail"
+
             row[label] = { 
                 'has_code': 'no' if student_code == "" else 'yes',
                 'syntax': 'ok' if syntax['ok'] else 'error',
-                'similarity': similarity['pct_similar']
+                'similarity': similarity['pct_similar'],
+                'tests': test_summary
             }
             details = {
                 'label': label,
@@ -308,7 +338,8 @@ class NotebookFile(object):
                 'syntax': syntax,
                 'similarity': similarity,
                 'student': student_code,
-                'solution': solution_code
+                'solution': solution_code,
+                'tests': test_results
             }
             row['details'].append(details)
 
@@ -320,7 +351,7 @@ class NotebookFile(object):
                  if float(row[label]['similarity']) < solution_similarity_threshold:
                     row['issues'].append(f"{label} code not at least {solution_similarity_threshold} similar to expected solution.")
 
-            #TODO test input, expected output
+
 
         if output_issues:
             for issue in row['issues']:
@@ -330,8 +361,8 @@ class NotebookFile(object):
                 print(f"{OK} Your solution cells have no syntax errors.")
                 if solution_code != "":
                     print(f"{OK} your solution is within the similatiry threshold of: {solution_similarity_threshold} to the expected solution. Your similarity: {row[label]['similarity']}")
-
-                #TODO Tests based on inputs / outputs
+                if test_summary != "":
+                    print(f"{OK} Your solution passed {len(test_results)} automated code tests.")
                 print(f"{OK} Completed your metacognition.")
         else:
             return row
