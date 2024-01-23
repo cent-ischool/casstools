@@ -289,6 +289,7 @@ class NotebookFile(object):
         except IndexError:
             print("ERROR: Missing Metacognition 3.5 Cell. Did you erase it?")
 
+
         for cell in exercise_code_cells:
             label = self._extract_metadata_value(cell, "label")
             student_code = "\n".join([line for line in cell.source.split("\n") if not line.strip().startswith("#")]).strip()
@@ -299,13 +300,11 @@ class NotebookFile(object):
 
             tests = self._extract_metadata_value(cell, "tests")
 
-            test_summary = ""
             test_results = []
             if student_code != "" and syntax['ok']:
                 for test in tests:
                     if test['kind'] == "runcode":
                         results = ct.execute_code(student_code, test['input-stream'])
-                        results['kind'] = test['kind']
                         results['search-output'] = test['search-output']
                         results['found-output-match'] = [ results['output'].find(output) >= 0 for output in test['search-output'] ]
                     elif test['kind'] == 'assertion':
@@ -314,17 +313,17 @@ class NotebookFile(object):
                         else:
                             code = test['code'] + "\n"
                         results = ct.execute_code(code, "")
-                        results['kind'] = test['kind']
-                    #test['results'] = results
+                    results['kind'] = test['kind']
+                    results['label'] = label
                     test_results.append(results)
 
-                print(test_results)
-                test_summary = "Pass"
-                for r in test_results:
-                    for i in range(len(r.get('found-output-match', []))):
-                        if not r['found-output-match'][i]:
-                            row['issues'].append(f"{label} did not pass automated test with inputs: {r['input']} Expected output should contain {r['search-output'][i]}. Actual output was {r['output']}")
-                            test_summary = "Fail"
+            test_summary = "Pass"
+            for r in test_results:
+                for i in range(len(r.get('found-output-match', []))):
+                    if not r['found-output-match'][i]:
+                        input_text = r['input'].replace("\n", " ").strip()
+                        row['issues'].append(f"{label} failed automated test with inputs: '{input_text}' Expected output should contain '{r['search-output'][i].strip()}'. Actual output was '{r['output'].strip()}'")
+                        test_summary = "Fail"
 
             row[label] = { 
                 'has_code': 'no' if student_code == "" else 'yes',
@@ -334,7 +333,7 @@ class NotebookFile(object):
             }
             details = {
                 'label': label,
-                'data' : row[label],
+                'data': row[label],
                 'syntax': syntax,
                 'similarity': similarity,
                 'student': student_code,
@@ -353,6 +352,7 @@ class NotebookFile(object):
 
 
 
+        #summarize!!!
         if output_issues:
             for issue in row['issues']:
                 print(f"{CANCEL} {issue}")
@@ -362,7 +362,12 @@ class NotebookFile(object):
                 if solution_code != "":
                     print(f"{OK} your solution is within the similatiry threshold of: {solution_similarity_threshold} to the expected solution. Your similarity: {row[label]['similarity']}")
                 if test_summary != "":
-                    print(f"{OK} Your solution passed {len(test_results)} automated code tests.")
+                    print(f"{OK} Your solution passed automated code tests:")
+                    for d in row['details']:
+                        for t in d['tests']:
+                            input_text = t['input'].replace("\n", " ").strip()
+                            output_text = ' '.join(t['search-output']).strip()
+                            print(f"\t{OK} {t['label']} with input: '{input_text}' found output: '{output_text}'")
                 print(f"{OK} Completed your metacognition.")
         else:
             return row
