@@ -181,7 +181,7 @@ class NotebookFile(object):
             if row['questions'] == "":
                 row['issues'].append("Questions cell is blank. You should have a question or comment.")
     
-        except IndextError:
+        except IndexError:
             print("ERROR: Missing Question Cell. Did you erase it?")
 
         
