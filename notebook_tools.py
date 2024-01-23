@@ -271,7 +271,7 @@ class NotebookFile(object):
                 if row[cell_type] == "":
                     row['issues'].append(f"{friendly_names[index]} cell is blank. Thoughtful completion of this section factors into your grade.")
         
-            except IndextError:
+            except IndexError:
                 print(f"ERROR: Missing {friendly_names[index]} Cell. Did you erase it?")
             index +=1
         
