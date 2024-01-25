@@ -299,6 +299,7 @@ class NotebookFile(object):
             similarity = ct.code_similarity_check(solution_code, student_code)
 
             tests = self._extract_metadata_value(cell, "tests")
+            tests = [] if tests is None else tests
 
             test_results = []
             if student_code != "" and syntax['ok']:
