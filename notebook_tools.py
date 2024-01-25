@@ -360,8 +360,8 @@ class NotebookFile(object):
             if len(row['issues']) == 0:    
                 print(f"{OK} Completed the problem analysis.")
                 print(f"{OK} Your solution cells have no syntax errors.")
-                if solution_code != "":
-                    print(f"{OK} your solution is within the similatiry threshold of: {solution_similarity_threshold} to the expected solution. Your similarity: {row[label]['similarity']}")
+                # if solution_code != "":
+                #     print(f"{OK} your solution is within the similatiry threshold of: {solution_similarity_threshold} to the expected solution. Your similarity: {row[label]['similarity']}")
                 if test_summary != "":
                     print(f"{OK} Your solution passed automated code tests:")
                     for d in row['details']:
