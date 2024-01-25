@@ -357,15 +357,15 @@ class NotebookFile(object):
         if output_issues:
             for issue in row['issues']:
                 print(f"{CANCEL} {issue}")
-            if len(row['issues']) == 0:    
+            if len(row['issues']) == 0:
                 print(f"{OK} Completed the problem analysis.")
                 print(f"{OK} Your solution cells have no syntax errors.")
-                # if solution_code != "":
-                #     print(f"{OK} your solution is within the similatiry threshold of: {solution_similarity_threshold} to the expected solution. Your similarity: {row[label]['similarity']}")
-                if test_summary != "":
-                    print(f"{OK} Your solution passed automated code tests:")
-                    for d in row['details']:
-                        for t in d['tests']:
+                for d in row.get("details", []):
+                    if d.get("solution", "") != "":
+                        print(f"{OK} your solution is within the similatiry threshold. Your similarity: {d[label]['similarity']}")
+                    if len(d.get("tests", [])) > 0:
+                        print(f"{OK} Your solution passed the following automated code tests:")
+                        for t in d.get('tests', []):
                             input_text = t['input'].replace("\n", " ").strip()
                             output_text = ' '.join(t['search-output']).strip()
                             print(f"\t{OK} {t['label']} with input: '{input_text}' found output: '{output_text}'")
