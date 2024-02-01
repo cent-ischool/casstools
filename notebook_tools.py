@@ -367,7 +367,7 @@ class NotebookFile(object):
                         print(f"{OK} Your solution passed the following automated code tests:")
                         for t in d.get('tests', []):
                             input_text = t['input'].replace("\n", " ").strip()
-                            output_text = ' '.join(t['search-output']).strip()
+                            output_text = ' '.join(t.get('search-output', '')).strip()
                             print(f"\t{OK} {t['label']} with input: '{input_text}' found output: '{output_text}'")
                 print(f"{OK} Completed your metacognition.")
         else:
