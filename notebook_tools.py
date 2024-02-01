@@ -238,7 +238,7 @@ class NotebookFile(object):
 
         cell_types = ['analysis_output_cell', "analysis_input_cell", "analysis_plan_cell", "learned_cell", "challenges_cell", "prepared_cell", "help_cell", "comfort_cell"]
 
-        for cell_type in cell_types:            
+        for cell_type in cell_types:
             cells = self.markdown_cells_of_type(cell_type)
             print("CELL", cells)
             check1 = self.__check(len(cells)==1)       
