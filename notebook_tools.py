@@ -314,17 +314,26 @@ class NotebookFile(object):
                         else:
                             code = test['code'] + "\n"
                         results = ct.execute_code(code, "")
+                        results['test-code'] = test['code']
+                        results['test-results'] = 'ok' if results['ok'] else results['error']
+
                     results['kind'] = test['kind']
                     results['label'] = label
                     test_results.append(results)
 
             test_summary = "Pass"
             for r in test_results:
-                for i in range(len(r.get('found-output-match', []))):
-                    if not r['found-output-match'][i]:
-                        input_text = r['input'].replace("\n", " ").strip()
-                        row['issues'].append(f"{label} failed automated test with inputs: '{input_text}' Expected output should contain '{r['search-output'][i].strip()}'. Actual output was '{r['output'].strip()}'")
-                        test_summary = "Fail"
+                if r.get("kind", "") == "runcode":
+                    for i in range(len(r.get('found-output-match', []))):
+                        if not r['found-output-match'][i]:
+                            input_text = r['input'].replace("\n", " ").strip()
+                            row['issues'].append(f"{label} failed automated test with inputs: '{input_text}' Expected output should contain '{r['search-output'][i].strip()}'. Actual output was '{r['output'].strip()}'")
+                            test_summary = "Fail"
+                elif r.get("kind", "") == "assertion":
+                    if not r['ok']:
+                        test_code = r.get('test-code', "")
+                        test_results = r.get('test-results', "")
+                        row['issues'].append(f"{label} Failed Test: Code: {test_code} Results: {test_results}")
 
             row[label] = { 
                 'has_code': 'no' if student_code == "" else 'yes',
@@ -348,7 +357,7 @@ class NotebookFile(object):
             elif row[label]['syntax'] == 'error':
                 row['issues'].append(f"{label} code has syntax error: {syntax['error']}. Fix errors for a better grade.")
             if solution_code != "":
-                 if float(row[label]['similarity']) < solution_similarity_threshold:
+                if float(row[label]['similarity']) < solution_similarity_threshold:
                     row['issues'].append(f"{label} code not at least {solution_similarity_threshold} similar to expected solution.")
 
 
@@ -366,9 +375,14 @@ class NotebookFile(object):
                     if len(d.get("tests", [])) > 0:
                         print(f"{OK} Your solution passed the following automated code tests:")
                         for t in d.get('tests', []):
-                            input_text = t['input'].replace("\n", " ").strip()
-                            output_text = ' '.join(t.get('search-output', '')).strip()
-                            print(f"\t{OK} {t['label']} with input: '{input_text}' found output: '{output_text}'")
+                            if t.get('kind', "") == "runcode":
+                                input_text = t['input'].replace("\n", " ").strip()
+                                output_text = ' '.join(t.get('search-output', '')).strip()
+                                print(f"\t{OK} {t['label']} with input: '{input_text}' found output: '{output_text}'")
+                            elif t.get('kind', "") == "assertion":
+                                test_code = t.get('test-code', "")
+                                test_results = t.get('test-results', "")
+                                print(f"\t{OK} {t['label']} Test Passed: Code: {test_code} Results: {test_results}")
                 print(f"{OK} Completed your metacognition.")
         else:
             return row
