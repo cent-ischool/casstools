@@ -5,8 +5,8 @@ from datetime import datetime
 import pandas as pd
 from ipylab import JupyterFrontEnd
 
-from .cass_client import CassClient
-from .path_parser import PathParser
+from casstools.cass_client import CassClient
+from casstools.path_parser import PathParser
 
 WARN = "\U000026A0"
 CAL = "\U0001F553"

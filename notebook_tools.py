@@ -1,4 +1,5 @@
 import nbformat
+from ipylab import JupyterFrontEnd
 from casstools.path_parser import PathParser
 from casstools import code_tools as ct
 
@@ -18,6 +19,11 @@ class NotebookFile(object):
         self.filespec = filespec
         self.contents = self.load_notebook(filespec)
         self.filetype = self.__get_file_type(filespec)
+
+    def _autosave(self):
+        # autosave
+        app = JupyterFrontEnd()
+        app.commands.execute('docmanager:save')
 
     def __get_file_type(self, filespec):
         file_type = filespec.split("/")[-1].split("-")[0].upper()
@@ -58,7 +64,7 @@ class NotebookFile(object):
             if c['source'].find(submission) >=0:
                 return True
         return False
-            
+
 
     def code_cells_of_type(self, cell_type, executed_only=False):
         '''
@@ -76,7 +82,7 @@ class NotebookFile(object):
     def markdown_cells_of_type(self, cell_type):
         cells = [c for c in self.markdown_cells if self._extract_metadata_value(c, "label") == cell_type]
         return cells 
-        
+
     @property
     def exercise_code_cells(self):
         cells = [c for c in self.code_cells if self._extract_metadata_value(c, "code_cell_type") in ["debug_code", "write_code"]]
@@ -94,6 +100,7 @@ class NotebookFile(object):
         '''
         validated the lab file has the necessary metadata cells for the self-check, and lab is ready to publish. This is an author's tool to make sure check_lab will work.
         '''
+        self._autosave()
         check1 = self.__check(self.has_submission_cell)
         print(f"{check1} notebook: has submission cell")
         
@@ -148,6 +155,7 @@ class NotebookFile(object):
         '''
         Pre-check/ pre-grade lab before submission.
         '''
+        self._autosave()
         row = { 'issues': [], 'details': [] }
         # INVENTORY
         run_code_cells = self.code_cells_of_type("run_code")
@@ -159,7 +167,7 @@ class NotebookFile(object):
         row['code_cells_pct'] = f"{row['code_cells_executed']/row['code_cells']}"
         if float(row['code_cells_pct']) < 1.0:
             row['issues'].append("Not all code cells were executed.")
-            
+
         try:
             comfort_cell = self.markdown_cells_of_type("comfort_cell")[0]
             row['comfort_level'] = comfort_cell['source'].strip()
@@ -171,7 +179,7 @@ class NotebookFile(object):
                     row['issues'].append("Comfort level should be 1,2,3 or 4.")
             else:
                  row['issues'].append("Comfort level should be 1,2,3 or 4.")
-                
+
         except IndexError:
             print("ERROR: Missing Comfort Cell. Did you erase it?")
 
@@ -233,6 +241,7 @@ class NotebookFile(object):
         '''
         validated the homework file has the necessary metadata cells for the self-check, and lab is ready to publish. This is an author's tool to make sure check_lab will work.
         '''
+        self._autosave()
         check1 = self.__check(self.has_submission_cell)
         print(f"{check1} notebook: has submission cell")
 
@@ -257,6 +266,7 @@ class NotebookFile(object):
         '''
         Pre-check/ pre-grade homework before submission.
         '''
+        self._autosave()
         row = { 'issues': [], 'details': [] }
         # INVENTORY
         exercise_code_cells =  self.exercise_code_cells
@@ -270,11 +280,11 @@ class NotebookFile(object):
                 row[cell_type] = cell['source'].strip()
                 if row[cell_type] == "":
                     row['issues'].append(f"{friendly_names[index]} cell is blank. Thoughtful completion of this section factors into your grade.")
-        
+
             except IndexError:
                 print(f"ERROR: Missing {friendly_names[index]} Cell. Did you erase it?")
             index +=1
-        
+
         try:
             comfort_cell = self.markdown_cells_of_type("comfort_cell")[0]
             row['comfort_level'] = comfort_cell['source'].strip()

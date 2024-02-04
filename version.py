@@ -1,4 +1,5 @@
 history = lambda: [
+    {"ver" : "0.1.3-20240204", "text": "Autosave before any validate or check is run." },
     {"ver" : "0.1.2-20240201", "text": "Added support for tests through python assert statement" },
     {"ver" : "0.1.1-20240125", "text": "Fixed bugs in code similatiry tests for homework checker." },
     {"ver" : "0.1.0-20240120", "text": "Customizable code similarity tests. Small issue with assignment submission" },
