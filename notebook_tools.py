@@ -11,9 +11,10 @@ CANCEL = "\U0000274C"
 
 class NotebookFile(object):
 
-    def __init__(self, filespec = None):
+    def __init__(self, filespec=None):
 
         if filespec is None:
+            self._autosave()
             filespec = PathParser().fullpath
 
         self.filespec = filespec
@@ -100,17 +101,16 @@ class NotebookFile(object):
         '''
         validated the lab file has the necessary metadata cells for the self-check, and lab is ready to publish. This is an author's tool to make sure check_lab will work.
         '''
-        self._autosave()
         check1 = self.__check(self.has_submission_cell)
         print(f"{check1} notebook: has submission cell")
-        
+
         for rc_cell in self.code_cells_of_type("run_code"):
 
             print("CELL:", rc_cell)
-            
+
             check1 = self.__check(len(rc_cell['source']) > 0)
             print(f"\t{check1} run_code cell: should have has code")
-            
+
             check2 = self.__check(rc_cell['execution_count'] is None)
             print(f"\t{check2} run_code cell: should be no execution_count")                
 
@@ -148,14 +148,13 @@ class NotebookFile(object):
         print(f"\t{check1} question_cell: should have ONE questions cell")
         check2 = self.__check(questions_cells[0]['source'].strip()=="")
         print(f"\t{check1} question_cell: should should be empty")
-        
 
-    
+
+
     def check_lab(self, output_issues=True):
         '''
         Pre-check/ pre-grade lab before submission.
         '''
-        self._autosave()
         row = { 'issues': [], 'details': [] }
         # INVENTORY
         run_code_cells = self.code_cells_of_type("run_code")
@@ -241,7 +240,6 @@ class NotebookFile(object):
         '''
         validated the homework file has the necessary metadata cells for the self-check, and lab is ready to publish. This is an author's tool to make sure check_lab will work.
         '''
-        self._autosave()
         check1 = self.__check(self.has_submission_cell)
         print(f"{check1} notebook: has submission cell")
 
@@ -266,7 +264,6 @@ class NotebookFile(object):
         '''
         Pre-check/ pre-grade homework before submission.
         '''
-        self._autosave()
         row = { 'issues': [], 'details': [] }
         # INVENTORY
         exercise_code_cells =  self.exercise_code_cells
