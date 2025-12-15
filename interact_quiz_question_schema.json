@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/jmshea/jupyterquiz/question_schema.json",
+  "title": "JupyterQuiz Question Schema",
+  "description": "Schema for interactive quiz questions in JupyterQuiz",
+
+  "definitions": {
+    "multipleChoiceAnswer": {
+      "type": "object",
+      "required": ["answer", "correct"],
+      "properties": {
+        "answer": {
+          "type": "string",
+          "description": "The answer text displayed to the user"
+        },
+        "correct": {
+          "type": "boolean",
+          "description": "Whether this answer is correct"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "Feedback shown when this answer is selected"
+        }
+      }
+    },
+
+    "numericValueAnswer": {
+      "type": "object",
+      "required": ["type", "value", "correct"],
+      "properties": {
+        "type": {
+          "const": "value",
+          "description": "Exact value match"
+        },
+        "value": {
+          "type": "number",
+          "description": "The correct numeric value"
+        },
+        "correct": {
+          "type": "boolean",
+          "description": "Whether this value is considered correct"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "Feedback shown when this value is matched"
+        }
+      }
+    },
+
+    "numericRangeAnswer": {
+      "type": "object",
+      "required": ["type", "range"],
+      "properties": {
+        "type": {
+          "const": "range",
+          "description": "Range match [min, max)"
+        },
+        "range": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Range [min, max) - min inclusive, max exclusive"
+        },
+        "correct": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether values in this range are correct"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "Feedback shown when value falls in this range"
+        }
+      }
+    },
+
+    "numericDefaultAnswer": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "const": "default",
+          "description": "Default feedback for unmatched values"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "Feedback shown when no other answer matches"
+        }
+      }
+    },
+
+    "tableHeaderRows": {
+      "type": "object",
+      "required": ["headers", "rows"],
+      "properties": {
+        "headers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Column headers"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "description": "Row data as array of values"
+          },
+          "description": "Table rows"
+        }
+      }
+    },
+
+    "tableRecords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "description": "Table as list of dicts (pandas records format)"
+    }
+  },
+
+  "type": "object",
+  "required": ["question", "type", "answers"],
+  "properties": {
+    "question": {
+      "type": "string",
+      "description": "The question text (can include HTML)"
+    },
+
+    "type": {
+      "type": "string",
+      "enum": ["multiple_choice", "many_choice", "numeric", "string"],
+      "description": "Question type"
+    },
+
+    "code": {
+      "type": "string",
+      "description": "Optional code block to display with the question"
+    },
+
+    "table": {
+      "oneOf": [
+        { "$ref": "#/definitions/tableHeaderRows" },
+        { "$ref": "#/definitions/tableRecords" }
+      ],
+      "description": "Optional data table to display"
+    },
+
+    "precision": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Decimal precision for numeric answer comparison (default: 2)"
+    },
+
+    "answers": {
+      "type": "array",
+      "description": "List of possible answers",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/definitions/multipleChoiceAnswer" },
+          { "$ref": "#/definitions/numericValueAnswer" },
+          { "$ref": "#/definitions/numericRangeAnswer" },
+          { "$ref": "#/definitions/numericDefaultAnswer" }
+        ]
+      }
+    }
+  },
+
+  "allOf": [
+    {
+      "if": {
+        "properties": { "type": { "enum": ["multiple_choice", "many_choice"] } }
+      },
+      "then": {
+        "properties": {
+          "answers": {
+            "items": { "$ref": "#/definitions/multipleChoiceAnswer" }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "type": { "const": "numeric" } }
+      },
+      "then": {
+        "properties": {
+          "answers": {
+            "items": {
+              "oneOf": [
+                { "$ref": "#/definitions/numericValueAnswer" },
+                { "$ref": "#/definitions/numericRangeAnswer" },
+                { "$ref": "#/definitions/numericDefaultAnswer" }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+
+  "examples": [
+    {
+      "question": "What is 2 + 2?",
+      "type": "multiple_choice",
+      "answers": [
+        { "answer": "3", "correct": false, "feedback": "Too low!" },
+        { "answer": "4", "correct": true, "feedback": "Correct!" },
+        { "answer": "5", "correct": false, "feedback": "Too high!" }
+      ]
+    },
+    {
+      "question": "What is the output of this code?",
+      "type": "multiple_choice",
+      "code": "print(2 ** 3)",
+      "answers": [
+        { "answer": "6", "correct": false, "feedback": "That's 2 * 3" },
+        { "answer": "8", "correct": true, "feedback": "Correct! 2^3 = 8" }
+      ]
+    },
+    {
+      "question": "What is the mean of the 'value' column?",
+      "type": "numeric",
+      "table": {
+        "headers": ["id", "value"],
+        "rows": [[1, 10], [2, 20], [3, 30]]
+      },
+      "answers": [
+        { "type": "value", "value": 20, "correct": true, "feedback": "Correct!" },
+        { "type": "default", "feedback": "Calculate (10+20+30)/3" }
+      ]
+    }
+  ]
+}

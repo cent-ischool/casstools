@@ -1,0 +1,156 @@
+[
+    {
+        "question": "Which of these is the ratio of a circle's circumference to its diameter?",
+        "type": "multiple_choice",
+        "answers": [
+            {
+                "answer": "\u03c0 (pi)",
+                "correct": true,
+                "feedback": "Correct!"
+            },
+            {
+                "answer": "22/7",
+                "correct": false,
+                "feedback": "22/7 is only an approximation."
+            },
+            {
+                "answer": "3 \ud83d\ude0a",
+                "correct": false,
+                "feedback": "This is a crude approximation."
+            },
+            {
+                "answer": "\u03c4 (tau)",
+                "correct": false,
+                "feedback": "Tau is circumference/radius, not diameter."
+            }
+        ]
+    },
+    {
+        "question": "What is the output of this code?",
+        "code": "x = 10\nprint(\"x\")",
+        "type": "multiple_choice",
+        "answers": [
+            {
+                "answer": "10",
+                "correct": false,
+                "feedback": "That would be print(x) without quotes."
+            },
+            {
+                "answer": "x",
+                "correct": true,
+                "feedback": "Correct! The quotes make it a string literal."
+            },
+            {
+                "answer": "Error",
+                "correct": false,
+                "feedback": "This code runs fine."
+            },
+            {
+                "answer": "\"x\"",
+                "correct": false,
+                "feedback": "The quotes are not included in the output."
+            }
+        ]
+    },
+    {
+        "question": "What value does this function return?",
+        "code": "def mystery(n):\n    return n * 2 + 1\n\nmystery(5)",
+        "type": "numeric",
+        "answers": [
+            {
+                "type": "value",
+                "value": 11,
+                "correct": true,
+                "feedback": "Correct! 5 * 2 + 1 = 11"
+            },
+            {
+                "type": "default",
+                "feedback": "Try again. Calculate 5 * 2 + 1."
+            }
+        ]
+    },
+    {
+        "question": "Given this DataFrame, what is the mean of the \"score\" column?",
+        "table": {
+            "headers": [
+                "name",
+                "score",
+                "grade"
+            ],
+            "rows": [
+                [
+                    "Alice",
+                    85,
+                    "B"
+                ],
+                [
+                    "Bob",
+                    92,
+                    "A"
+                ],
+                [
+                    "Charlie",
+                    78,
+                    "C"
+                ],
+                [
+                    "Diana",
+                    95,
+                    "A"
+                ]
+            ]
+        },
+        "code": "df['score'].mean()",
+        "type": "numeric",
+        "answers": [
+            {
+                "type": "value",
+                "value": 87.5,
+                "correct": true,
+                "feedback": "Correct! (85 + 92 + 78 + 95) / 4 = 87.5"
+            },
+            {
+                "type": "default",
+                "feedback": "Add all scores and divide by 4."
+            }
+        ]
+    },
+    {
+        "question": "Given this DataFrame, how many rows would df[df[\"grade\"] == \"A\"] return?",
+        "table": [
+            {
+                "name": "Alice",
+                "score": 85,
+                "grade": "B"
+            },
+            {
+                "name": "Bob",
+                "score": 92,
+                "grade": "A"
+            },
+            {
+                "name": "Charlie",
+                "score": 78,
+                "grade": "C"
+            },
+            {
+                "name": "Diana",
+                "score": 95,
+                "grade": "A"
+            }
+        ],
+        "type": "numeric",
+        "answers": [
+            {
+                "type": "value",
+                "value": 2,
+                "correct": true,
+                "feedback": "Correct! Bob and Diana have grade \"A\"."
+            },
+            {
+                "type": "default",
+                "feedback": "Count the rows where grade equals \"A\"."
+            }
+        ]
+    }
+]
